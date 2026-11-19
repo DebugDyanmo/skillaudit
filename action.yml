@@ -1,0 +1,22 @@
+name: "skillaudit"
+description: "Security audit for AI agent skills (SKILL.md). Fails the build on risky skills."
+branding:
+  icon: shield
+  color: red
+inputs:
+  path:
+    description: "Directory containing skills"
+    default: "."
+  fail-on:
+    description: "Fail at or above this severity (low, medium, high, critical)"
+    default: "high"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - run: pip install "${{ github.action_path }}"
+      shell: bash
+    - run: skillaudit "${{ inputs.path }}" --fail-on "${{ inputs.fail-on }}" --no-color
+      shell: bash
