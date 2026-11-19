@@ -3,7 +3,7 @@
 **`npm audit` for AI agent skills.** Check any `SKILL.md` for prompt injection, hidden instructions, data exfiltration and dangerous commands *before* you let an agent run it.
 
 ```bash
-pip install skillaudit
+pip install agent-skill-audit
 skillaudit ~/.claude/skills
 ```
 

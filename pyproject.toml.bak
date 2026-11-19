@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skillaudit"
+version = "0.1.0"
+description = "Security audit for AI agent skills (SKILL.md). Like npm audit, for skills."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = []
+keywords = ["ai", "agents", "skills", "security", "claude", "mcp", "linter", "audit"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Security",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+skillaudit = "skillaudit.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/DebugDyanmo/skillaudit"
+Issues = "https://github.com/DebugDyanmo/skillaudit/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
