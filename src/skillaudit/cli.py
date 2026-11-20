@@ -11,6 +11,18 @@ from .report import to_json, to_sarif, to_text
 from .rules import RULES, SEVERITY_ORDER, SPECIAL_RULES
 from .scanner import scan_paths
 
+BANNER = r"""
+    _   _ _ _              _ _ _
+ __| |_(_) | |__ _ _  _ __| (_) |_
+(_-< / / | | / _` | || / _` | |  _|
+/__/_\_\_|_|_\__,_|\_,_\__,_|_|\__|
+"""
+
+
+def _print_banner() -> None:
+    red, dim, end = "\033[1;31m", "\033[2m", "\033[0m"
+    print(f"{red}{BANNER}{end}{dim}  npm audit for AI agent skills  v{__version__}{end}\n")
+
 
 def _list_rules() -> int:
     rows = [(r.id, r.severity, r.category, r.title) for r in RULES]
@@ -32,6 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--min-severity", choices=list(SEVERITY_ORDER), default="low",
                    help="hide findings below this severity")
     p.add_argument("--no-color", action="store_true")
+    p.add_argument("--no-banner", action="store_true", help="do not print the ASCII banner")
     p.add_argument("--list-rules", action="store_true", help="show all rules and exit")
     p.add_argument("--version", action="version", version=f"skillaudit {__version__}")
     return p
@@ -61,6 +74,8 @@ def _run(argv=None) -> int:
         print(to_sarif(reports))
     else:
         color = sys.stdout.isatty() and not args.no_color and "NO_COLOR" not in os.environ
+        if color and not args.no_banner:
+            _print_banner()
         print(to_text(reports, color))
 
     floor = SEVERITY_ORDER[args.fail_on]
