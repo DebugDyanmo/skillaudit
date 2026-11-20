@@ -8,6 +8,7 @@
 ```
 
 **npm audit for AI agent skills**
+
 Detect prompt injection, hidden instructions and data exfiltration before your agent runs a skill.
 
 ![demo](demo.gif)
