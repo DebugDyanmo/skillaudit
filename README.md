@@ -1,6 +1,18 @@
-# 🛡️ skillaudit
+<div align="center">
+
+```text
+    _   _ _ _              _ _ _
+ __| |_(_) | |__ _ _  _ __| (_) |_
+(_-< / / | | / _` | || / _` | |  _|
+/__/_\_\_|_|_\__,_|\_,_\__,_|_|\__|
+```
+
+**npm audit for AI agent skills**
+Detect prompt injection, hidden instructions and data exfiltration before your agent runs a skill.
 
 ![demo](demo.gif)
+
+</div>
 
 **`npm audit` for AI agent skills.** Check any `SKILL.md` for prompt injection, hidden instructions, data exfiltration and dangerous commands *before* you let an agent run it.
 
