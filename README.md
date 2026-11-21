@@ -102,6 +102,30 @@ Exit codes: `0` clean, `1` findings at or above `--fail-on` (default `high`), `2
 sudo apt install jq   # skillaudit-ignore SA009
 ```
 
+## Troubleshooting
+
+### `skillaudit: command not found` on Windows
+
+The `skillaudit` script may not be on your `PATH`. Run the module directly instead:
+
+```bash
+python -m skillaudit ~/.claude/skills
+```
+
+### How to read the risk score
+
+Each skill gets a `risk N/100` score and a verdict. Every distinct rule adds weight by severity (low 3, medium 10, high 25, critical 40); each repeated finding of the same rule adds 2 more, up to a maximum of 100. Verdicts are `CLEAN` (no findings), `LOW RISK`, `REVIEW` (any high finding or score ≥ 25), and `DANGEROUS` (any critical finding or score ≥ 70). Use `--min-severity` to hide quieter findings and `--fail-on` to choose the severity that makes the command exit with code 1.
+
+### Silence a false positive with `skillaudit-ignore`
+
+Add a `skillaudit-ignore` comment on the same line as the finding, or on the line just above it, naming the rule id (or `ALL`):
+
+```bash
+sudo apt install jq  # skillaudit-ignore SA009
+```
+
+This suppresses that rule for that line only. Use it sparingly: a suppressed finding is one you have reviewed and accepted.
+
 ## Limitations
 
 skillaudit is **static, pattern-based analysis**. It catches common and well-known attack patterns, but a clean result is **not proof a skill is safe**. Always read skills from sources you do not trust. Think of it as a smoke detector, not a guarantee.
