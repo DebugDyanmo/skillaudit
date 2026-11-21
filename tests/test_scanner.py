@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 
 from skillaudit.cli import main
 from skillaudit.scanner import scan_paths, scan_skill
@@ -21,9 +22,9 @@ def ids(report):
     return {f.rule_id for f in report.findings}
 
 
-def test_safe_example_is_safe():
+def test_clean_example_is_clean():
     reports = scan_paths([str(ROOT / "examples" / "safe-skill")])
-    assert reports[0].verdict == "SAFE"
+    assert reports[0].verdict == "CLEAN"
     assert reports[0].findings == []
 
 
@@ -75,7 +76,7 @@ def test_symlink_outside(tmp_path):
     try:
         (d / "link.txt").symlink_to(outside)
     except (OSError, NotImplementedError):
-        pytest.skip("symlinks need extra privileges on this OS")
+        pytest.skip("creating symlinks needs extra privileges on this OS (e.g. Windows)")
     assert "SA017" in ids(scan_skill(d))
 
 
@@ -93,3 +94,12 @@ def test_json_and_sarif(capsys):
     main([str(ROOT / "examples" / "risky-skill"), "--format", "sarif"])
     sarif = json.loads(capsys.readouterr().out)
     assert sarif["version"] == "2.1.0" and sarif["runs"][0]["results"]
+
+
+def test_capabilities_reported():
+    r = scan_paths([str(ROOT / "examples" / "risky-skill")])[0]
+    assert "scripts/setup.sh" in r.scripts
+    assert "webhook.site" in r.hosts
+    assert "Bash" in r.allowed_tools
+    clean = scan_paths([str(ROOT / "examples" / "safe-skill")])[0]
+    assert clean.scripts == [] and clean.hosts == []

@@ -13,6 +13,8 @@ from .rules import RULES, SEVERITY_ORDER, SEVERITY_WEIGHT
 SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", ".mypy_cache"}
 MAX_BYTES = 1_000_000
 HIDDEN_RE = re.compile("[\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]")
+URL_HOST_RE = re.compile(r"https?://([A-Za-z0-9.-]+)")
+SCRIPT_EXT = {".sh", ".bash", ".zsh", ".py", ".js", ".ts", ".mjs", ".cjs", ".rb", ".pl", ".ps1", ".bat"}
 IGNORE_RE = re.compile(r"skillaudit-ignore[:\s]+([A-Za-z0-9_, ]+)")
 
 
@@ -34,6 +36,9 @@ class SkillReport:
     path: str
     findings: List[Finding] = field(default_factory=list)
     files_scanned: int = 0
+    scripts: List[str] = field(default_factory=list)
+    hosts: List[str] = field(default_factory=list)
+    allowed_tools: str = ""
 
     @property
     def score(self) -> int:
@@ -55,7 +60,7 @@ class SkillReport:
             return "REVIEW"
         if self.findings:
             return "LOW RISK"
-        return "SAFE"
+        return "CLEAN"
 
 
 def parse_frontmatter(text: str) -> Optional[dict]:
@@ -118,7 +123,7 @@ def scan_skill(skill_dir: Path, min_severity: str = "low") -> SkillReport:
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS and (here / d) not in nested]
         for fname in filenames:
             fpath = here / fname
-            rel = str(fpath.relative_to(skill_dir))
+            rel = fpath.relative_to(skill_dir).as_posix()  # same output on Windows and Linux
 
             if fpath.is_symlink():
                 target = fpath.resolve()
@@ -146,9 +151,20 @@ def scan_skill(skill_dir: Path, min_severity: str = "low") -> SkillReport:
             report.files_scanned += 1
             _scan_text(text, rel, report.findings)
 
+            if fpath.suffix.lower() in SCRIPT_EXT:
+                report.scripts.append(rel)
+            for host in URL_HOST_RE.findall(text):
+                host = host.strip(".").lower()
+                if host and host not in report.hosts:
+                    report.hosts.append(host)
+
             if fname.lower() == "skill.md":
                 _check_skill_md(text, rel, report.findings)
+                fm = parse_frontmatter(text) or {}
+                report.allowed_tools = fm.get("allowed-tools", "")
 
+    report.hosts.sort()
+    report.scripts.sort()
     floor = SEVERITY_ORDER[min_severity]
     report.findings = [f for f in report.findings if SEVERITY_ORDER[f.severity] >= floor]
     report.findings.sort(key=lambda f: (-SEVERITY_ORDER[f.severity], f.file, f.line))

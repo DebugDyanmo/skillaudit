@@ -11,7 +11,7 @@ from .scanner import SkillReport
 
 COLORS = {
     "critical": "\033[1;31m", "high": "\033[31m", "medium": "\033[33m", "low": "\033[36m",
-    "SAFE": "\033[32m", "LOW RISK": "\033[36m", "REVIEW": "\033[33m", "DANGEROUS": "\033[1;31m",
+    "CLEAN": "\033[32m", "LOW RISK": "\033[36m", "REVIEW": "\033[33m", "DANGEROUS": "\033[1;31m",
     "dim": "\033[2m", "bold": "\033[1m", "end": "\033[0m",
 }
 SARIF_LEVEL = {"critical": "error", "high": "error", "medium": "warning", "low": "note"}
@@ -28,7 +28,7 @@ def to_text(reports: List[SkillReport], color: bool = True) -> str:
         out.append(_c(head, "bold", color))
         out.append(_c(f"  {r.path}  ({r.files_scanned} files scanned)", "dim", color))
         if not r.findings:
-            out.append("  No issues found.")
+            out.append("  No known risky patterns found. This is not a guarantee of safety.")
         for f in r.findings:
             loc = f"{f.file}:{f.line}" if f.line else f.file
             out.append(f"  {_c(f.severity.upper().ljust(8), f.severity, color)} {f.rule_id}  {f.title}")
@@ -36,6 +36,11 @@ def to_text(reports: List[SkillReport], color: bool = True) -> str:
             if f.snippet:
                 out.append(f"           > {f.snippet}")
             out.append(f"           fix: {f.advice}")
+        out.append(_c("  Capabilities (what this skill can do):", "bold", color))
+        out.append(f"    scripts : {', '.join(r.scripts) if r.scripts else 'none bundled'}")
+        hosts = ", ".join(r.hosts[:6]) + (" ..." if len(r.hosts) > 6 else "")
+        out.append(f"    network : {hosts if r.hosts else 'no external hosts referenced'}")
+        out.append(f"    tools   : {r.allowed_tools if r.allowed_tools else 'not declared'}")
         out.append("")
     total = sum(len(r.findings) for r in reports)
     out.append(f"Scanned {len(reports)} skill(s), {total} finding(s).")
@@ -50,6 +55,8 @@ def to_json(reports: List[SkillReport]) -> str:
                 {
                     "name": r.name, "path": r.path, "verdict": r.verdict, "score": r.score,
                     "files_scanned": r.files_scanned,
+                    "capabilities": {"scripts": r.scripts, "hosts": r.hosts,
+                                     "allowed_tools": r.allowed_tools},
                     "findings": [f.__dict__ for f in r.findings],
                 }
                 for r in reports
@@ -88,7 +95,7 @@ def to_sarif(reports: List[SkillReport]) -> str:
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
         "runs": [{
             "tool": {"driver": {"name": "skillaudit", "version": __version__,
-                                "informationUri": "https://github.com/DebugDyanmo/skillaudit",
+                                "informationUri": "https://github.com/YOUR-USERNAME/skillaudit",
                                 "rules": rules}},
             "results": results,
         }],
